@@ -1,5 +1,5 @@
 
-export type DeviceType = 0 | 1
+export type DeviceType = 0 | 1 // 0 => PC ; 1 => Mobile
 
 export type ISP = "cmcc" | "telecom" | "unicom"
 

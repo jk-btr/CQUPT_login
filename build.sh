@@ -1,3 +1,5 @@
+#Dependency
+npm install
 
 #Compile
 npx tsc -b || { echo "there is no npm!"; exit 1; }
