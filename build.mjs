@@ -1,3 +1,4 @@
+import { execSync } from 'node:child_process';
 import {
   cpSync,
   copyFileSync,
@@ -13,15 +14,24 @@ const root = path.dirname(fileURLToPath(import.meta.url));
 const projectPath = (...parts) => path.join(root, ...parts);
 const dist = projectPath('dist');
 
+// `--clean` only removes the final build, without installing dependencies.
 if (process.argv.includes('--clean')) {
   rmSync(dist, { recursive: true, force: true });
   console.log('clean over!');
 } else {
-  // TypeScript has already been compiled by `tsc -b` in package.json.
+  // On Windows these commands run through cmd.exe; on Unix they run through sh.
+  // Both commands run in the project root, even if invoked from another directory.
+  console.log('Installing dependencies...');
+  execSync('npm install', { cwd: root, stdio: 'inherit' });
+
+  console.log('Compiling TypeScript...');
+  execSync('npx tsc -b', { cwd: root, stdio: 'inherit' });
+  console.log('compile over!');
+
   const requiredDirs = ['src/dist', 'share/dist', 'ui/dist', 'public'];
   for (const dir of requiredDirs) {
     if (!existsSync(projectPath(dir))) {
-      throw new Error(`Missing ${dir}. Check your TypeScript build output and project files.`);
+      throw new Error(`Missing ${dir}. Check TypeScript output and project files.`);
     }
   }
 
@@ -39,16 +49,16 @@ if (process.argv.includes('--clean')) {
     }
   }
 
-  // Merge backend and frontend files into dist/.
+  // Merge backend and frontend outputs.
   rmSync(dist, { recursive: true, force: true });
   copyJsFiles('src/dist', 'dist/src');
   copyJsFiles('share/dist', 'dist/share');
-  cpSync(projectPath('public'), projectPath('dist', 'public'), { recursive: true });
+  cpSync(projectPath('public'), projectPath('dist/public'), { recursive: true });
   copyJsFiles('ui/dist', 'dist/public/ui');
   copyJsFiles('share/dist', 'dist/public/share');
   console.log('merge over!');
 
-  // Remove intermediate TypeScript build folders.
+  // Remove intermediate compiler outputs.
   for (const dir of ['src/dist', 'ui/dist', 'share/dist']) {
     rmSync(projectPath(dir), { recursive: true, force: true });
   }
