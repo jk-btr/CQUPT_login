@@ -7,7 +7,7 @@
   "scripts": {
     "dev": "node ./dist/src/index.js",
     "start": "npm run build && npm run dev",
-    "build": "sh build.sh",
-    "clean": "rm -rf dist"
+    "build": "tsc -b && node build.mjs",
+    "clean": "node build.mjs --clean"
   }
 }
